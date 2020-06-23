@@ -1,0 +1,56 @@
+Please see Token Documentation (v2)
+
+The tokenizer converts a string into a tokenized term, which is itself a list of tokens. (Note that a tokenized term is not itself a token)
+
+TokenizedTerm[This is not a token]
+    | (<Token>)*
+
+Each token is one of 6 types as shown below in order of decreasing priority
+
+Token[Note that there is no raw token. This is the check order]
+    | <Whitespace>
+    | <BracketedToken>
+    | <Label>
+    | <String>
+    | <Number>
+    | <Symbol>
+
+Note that due to the structure of a tokenized term, each string is uniquely mapped.
+Additionally, if the tokenizer realizes that the entire string was not tokenized, an error would be thrown
+
+
+String(check mode)
+    | '([^\\']|\\.)*' -> weak
+    | "([^\\"]|\\.)*" -> strong
+
+Number(check mode)
+    | (-)?[0-9]+\.[0-9]+ -> decimal
+    | (-)?[0-9]+         -> integer
+
+Symbol(check value (single character))
+    | ! | ~ -> not
+    | =     -> equality
+    | <    -> less than
+    | >     -> more than
+    | +     -> plus
+    | -     -> dash
+    | *    -> star
+    | #     -> hash
+    | _     -> underscore
+    | ;     -> semicolon
+    | /     -> fowardslash
+    | \     -> backslash
+    | |     -> pipe
+    | $     -> dollar
+    | %     -> percent
+
+Label(checkValue)
+    | [a-zA-Z][a-zA-Z0-9]*
+
+Whitespace(checkValue)
+    | \s+
+
+BracketedToken(check mode)
+    | \(<TokenizedTerm>\) -> curved
+    | \[<TokenizedTerm>\] -> square
+    | \{<TokenizedTerm>\} -> curly
