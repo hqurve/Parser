@@ -1,0 +1,37 @@
+In order to make parsing easier (and to an extent possible), we need to be able to identify tokens.
+This process would be referred to as token-matching and would be performed by TokenMatchers.
+
+Additionally, this process need to be dynamic, so TokenMatchers are identified and created dynamically.
+Each tokenMatcher is specified by a case-insensitive keyword and a list of possible tokens (arguments which are of type Token?).
+
+Here is a list of all tokenMatcher keywords followed by their accepted arguments
+
+any
+    |   -> matches any Token
+
+whitespace
+    |   -> matches any WhitespaceToken
+
+label
+    |          -> matches any LabelToken
+    | [Label=lbl]  -> matches any Label token with the specified label
+
+string
+    |         -> matches any StringToken
+    | [Label=mode]  -> matches any StringToken with the given mode
+
+number
+    |                            -> matches any NumberToken
+    | [Number=number]            -> matches any NumberToken with the specified value
+    | [Label=type]               -> matches any NumberToken of given type
+    | [Number=int1][Number=int2] -> matches any NumberToken with an integer between int1 and int2 (inclusive)
+    | [Number=int1][]            -> matches any NumberToken with an integer greater than or equal to int1
+    | [][Number=int2]            -> matches any NumberToken with an integer less then or equal to int2
+    | [Number=dec1][Number=dec2] -> matches any NumberToken with a decimal between dec1 and dec2 (inclusive)
+    | [Number=dec1][]            -> matches any NumberToken with a decimal greater than or equal to dec1
+    | [][Number=dec2]            -> matches any NumberToken with a decimal less than equal to dec2
+
+symbol
+    |               -> matches any SymbolToken
+    | [Symbol=sym]  -> matches any SymbolToken with the specified symbol
+
