@@ -1,10 +1,10 @@
 In order to make parsing easier (and to an extent possible), we need to be able to identify tokens.
-This process would be referred to as token-matching and would be performed by TokenMatchers.
+This process would be referred to as token-matching and would be performed by TokenPredicates.
 
-Additionally, this process need to be dynamic, so TokenMatchers are identified and created dynamically.
-Each tokenMatcher is specified by a case-insensitive keyword and a list of possible tokens (arguments which are of type Token?).
+Additionally, this process need to be dynamic, so TokenPredicates are identified and created dynamically.
+Each tokenPredicate is specified by a case-insensitive keyword and a list of possible tokens (arguments which are of type Token?).
 
-Here is a list of all tokenMatcher keywords followed by their accepted arguments
+Here is a list of all tokenPredicate keywords followed by their accepted arguments
 
 any
     |   -> matches any Token

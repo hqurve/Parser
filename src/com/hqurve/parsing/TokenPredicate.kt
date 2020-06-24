@@ -1,9 +1,9 @@
 package com.hqurve.parsing
 
-internal infix fun Token?.matches(tokenMatcher: TokenMatcher) = tokenMatcher.matches(this)
+internal infix fun Token?.matches(tokenPredicate: TokenPredicate) = tokenPredicate.matches(this)
 
 
-internal class TokenMatcher private constructor(
+internal class TokenPredicate private constructor(
     vararg comparableProperties: Any?,
     val matcherFun: (token: Token?)->Boolean
 ){
@@ -14,7 +14,7 @@ internal class TokenMatcher private constructor(
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
 
-        other as TokenMatcher
+        other as TokenPredicate
 
         if (!properties.contentEquals(other.properties)) return false
 
@@ -27,49 +27,49 @@ internal class TokenMatcher private constructor(
 
 
     companion object{
-        fun any() = TokenMatcher(Token){it is Token}
-        fun empty() = TokenMatcher(null){it == null}
-        fun exact(requiredToken: Token) = TokenMatcher(requiredToken){it == requiredToken}
+        fun any() = TokenPredicate(Token){it is Token}
+        fun empty() = TokenPredicate(null){it == null}
+        fun exact(requiredToken: Token) = TokenPredicate(requiredToken){it == requiredToken}
 
-        fun whitespace() = TokenMatcher(WhitespaceToken){it is WhitespaceToken}
+        fun whitespace() = TokenPredicate(WhitespaceToken){it is WhitespaceToken}
 
-        fun label() = TokenMatcher(LabelToken){it is LabelToken}
+        fun label() = TokenPredicate(LabelToken){it is LabelToken}
 
 
-        fun string() = TokenMatcher(StringToken){it is StringToken}
-        fun string(mode: StringToken.Modes) = TokenMatcher(StringToken, mode){it is StringToken && it.mode == mode}
+        fun string() = TokenPredicate(StringToken){it is StringToken}
+        fun string(mode: StringToken.Modes) = TokenPredicate(StringToken, mode){it is StringToken && it.mode == mode}
 
-        fun number() = TokenMatcher(NumberToken){it is NumberToken}
-        fun number(mode: NumberToken.Modes) = TokenMatcher(NumberToken, mode){it is NumberToken && it.mode == mode}
+        fun number() = TokenPredicate(NumberToken){it is NumberToken}
+        fun number(mode: NumberToken.Modes) = TokenPredicate(NumberToken, mode){it is NumberToken && it.mode == mode}
 
-        fun number(lowerBound: Long, upperBound: Long) = TokenMatcher(NumberToken, lowerBound, upperBound){
+        fun number(lowerBound: Long, upperBound: Long) = TokenPredicate(NumberToken, lowerBound, upperBound){
             it is NumberToken
                     && it.value is Long
                     && it.value in lowerBound..upperBound
         }
-        fun number(lowerBound: Int, upperBound: Int) = TokenMatcher(NumberToken, lowerBound, upperBound){
+        fun number(lowerBound: Int, upperBound: Int) = TokenPredicate(NumberToken, lowerBound, upperBound){
             it is NumberToken
                     && it.value is Long
                     && it.value in lowerBound..upperBound
         }
-        fun number(lowerBound: Double, upperBound: Double) = TokenMatcher(NumberToken, lowerBound, upperBound){
+        fun number(lowerBound: Double, upperBound: Double) = TokenPredicate(NumberToken, lowerBound, upperBound){
             it is NumberToken
                     && it.value.toDouble() in lowerBound..upperBound
         }
 
-        fun symbol() = TokenMatcher(SymbolToken){it is SymbolToken}
+        fun symbol() = TokenPredicate(SymbolToken){it is SymbolToken}
         fun symbol(sym: Char) = exact(SymbolToken(sym))
-        fun symbol(syms: Collection<Char>): TokenMatcher{
+        fun symbol(syms: Collection<Char>): TokenPredicate{
             val symbolSet = syms.toSet()
-            return TokenMatcher(SymbolToken, symbolSet){
+            return TokenPredicate(SymbolToken, symbolSet){
                 it is SymbolToken
                         && it.sym in symbolSet
             }
         }
 
-        private val tokenMatcherGenerators: Map<String, List<Pair< List<TokenMatcher>, (List<Token?>) -> TokenMatcher >>>
-        fun genTokenMatcher(keyWord: String, arguments: List<Token?>): TokenMatcher{
-            val generators = tokenMatcherGenerators[keyWord.toLowerCase()] ?: error("Invalid keyword: $keyWord")
+        private val TOKEN_PREDICATE_GENERATORS: Map<String, List<Pair< List<TokenPredicate>, (List<Token?>) -> TokenPredicate >>>
+        fun genTokenPredicate(keyWord: String, arguments: List<Token?>): TokenPredicate{
+            val generators = TOKEN_PREDICATE_GENERATORS[keyWord.toLowerCase()] ?: error("Invalid keyword: $keyWord")
 
             val (_, generator) =  generators.firstOrNull{ (patterns, _) ->
                     arguments.size == patterns.size
@@ -80,21 +80,21 @@ internal class TokenMatcher private constructor(
             return generator(arguments)
         }
         init{
-            tokenMatcherGenerators = mapOf(
+            TOKEN_PREDICATE_GENERATORS = mapOf(
                 "any" to listOf(
-                    emptyList<TokenMatcher>() to {_ -> whitespace()}
+                    emptyList<TokenPredicate>() to { _ -> whitespace()}
                 ),
                 "whitespace" to listOf(
-                    emptyList<TokenMatcher>() to {_ -> whitespace() }
+                    emptyList<TokenPredicate>() to { _ -> whitespace() }
                 ),
                 "label" to listOf(
-                    emptyList<TokenMatcher>() to {_ -> label() },
+                    emptyList<TokenPredicate>() to { _ -> label() },
 
                     listOf(label()) to {args -> exact(args[0] as LabelToken)}
                 ),
 
                 "string" to listOf(
-                    emptyList<TokenMatcher>() to {_ -> string() },
+                    emptyList<TokenPredicate>() to { _ -> string() },
 
                     listOf(label()) to {args ->
                         string(
@@ -104,7 +104,7 @@ internal class TokenMatcher private constructor(
                 ),
 
                 "number" to listOf(
-                    emptyList<TokenMatcher>() to {_ -> number()},
+                    emptyList<TokenPredicate>() to { _ -> number()},
 
                     listOf(number()) to {args -> exact(args[0] as NumberToken)},
 
@@ -154,7 +154,7 @@ internal class TokenMatcher private constructor(
                 ),
 
                 "symbol" to listOf(
-                    emptyList<TokenMatcher>() to {_ -> symbol()},
+                    emptyList<TokenPredicate>() to { _ -> symbol()},
 
                     listOf(symbol()) to {args -> exact(args[0] as SymbolToken)}
                 )
