@@ -27,32 +27,32 @@ internal class TokenPredicate private constructor(
 
 
     companion object{
-        fun any() = TokenPredicate(Token){it is Token}
+        fun any() = TokenPredicate(Token::class){it is Token}
         fun empty() = TokenPredicate(null){it == null}
         fun exact(requiredToken: Token) = TokenPredicate(requiredToken){it == requiredToken}
 
-        fun whitespace() = TokenPredicate(WhitespaceToken){it is WhitespaceToken}
+        fun whitespace() = TokenPredicate(WhitespaceToken::class){it is WhitespaceToken}
 
-        fun label() = TokenPredicate(LabelToken){it is LabelToken}
+        fun label() = TokenPredicate(LabelToken::class){it is LabelToken}
 
 
-        fun string() = TokenPredicate(StringToken){it is StringToken}
-        fun string(mode: StringToken.Modes) = TokenPredicate(StringToken, mode){it is StringToken && it.mode == mode}
+        fun string() = TokenPredicate(StringToken::class){it is StringToken}
+        fun string(mode: StringToken.Modes) = TokenPredicate(StringToken::class, mode){it is StringToken && it.mode == mode}
 
-        fun number() = TokenPredicate(NumberToken){it is NumberToken}
-        fun number(mode: NumberToken.Modes) = TokenPredicate(NumberToken, mode){it is NumberToken && it.mode == mode}
+        fun number() = TokenPredicate(NumberToken::class){it is NumberToken}
+        fun number(mode: NumberToken.Modes) = TokenPredicate(NumberToken::class, mode){it is NumberToken && it.mode == mode}
 
-        fun number(lowerBound: Long, upperBound: Long) = TokenPredicate(NumberToken, lowerBound, upperBound){
+        fun number(lowerBound: Long, upperBound: Long) = TokenPredicate(NumberToken::class, lowerBound, upperBound){
             it is NumberToken
                     && it.value is Long
                     && it.value in lowerBound..upperBound
         }
-        fun number(lowerBound: Int, upperBound: Int) = TokenPredicate(NumberToken, lowerBound, upperBound){
+        fun number(lowerBound: Int, upperBound: Int) = TokenPredicate(NumberToken::class, lowerBound, upperBound){
             it is NumberToken
                     && it.value is Long
                     && it.value in lowerBound..upperBound
         }
-        fun number(lowerBound: Double, upperBound: Double) = TokenPredicate(NumberToken, lowerBound, upperBound){
+        fun number(lowerBound: Double, upperBound: Double) = TokenPredicate(NumberToken::class, lowerBound, upperBound){
             it is NumberToken
                     && it.value.toDouble() in lowerBound..upperBound
         }

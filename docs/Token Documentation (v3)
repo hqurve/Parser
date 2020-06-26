@@ -1,0 +1,46 @@
+The tokenizer converts a string of characters int oan array of tokens.
+
+Each token is one of 5 types shown below in order of decreasing priority
+Note: this order is now insignificant since each tokenization is unique (see unsigned number)
+
+Tokenizers now have the following flags which are set at construction
+    ignoreWhitespaces = false
+    labelsHaveDigits = true
+    captureDecimalNumber = true
+    resolveEscapedStringCharacters = true
+
+Token
+    | <Whitespace>
+    | <Label>
+    | <String>
+    | <Number>
+    | <Symbol>
+
+Note, if the tokenizer realizes that the entire string was not tokenized, an error would be thrown
+
+Whitespace
+    | \s+
+
+Label(checkValue)
+    | [a-zA-Z][a-zA-Z0-9]*
+
+String
+    | '([^\\']|\\.)*' -> weak
+    | "([^\\"]|\\.)*" -> strong
+
+Number (unsigned) Note that this affects the ability to store minimum possible values if stored in twos compliment. However, this does make the tokenization unique
+    | [0-9]+\.[0-9]+ -> decimal
+    | [0-9]+         -> integer
+
+Symbol: For brevity, they would be listed in a grid form
+    !   ~   &   ^
+    $   %   #   @
+    =   +   -   *
+    /   \   |   _
+    ;   :   ?   ,
+    .
+    [   {   (   <
+    ]   }   )   >
+
+
+
