@@ -1,0 +1,18 @@
+Quantifiers are used to make repeating matches in a certain order.
+
+Quantifiers have three properties, a minimum, maximum and mode.
+
+There are three modes:
+    - Greedy: match as many as possible and backtrack if matches fail
+    - Reluctant: match as few as possible and only increase if the match fails
+    - Possessive: match as many as possible with no backtracking.
+
+A quantifier is said to be single if both its minimum and maximum are 1.
+A quantifier is said to be empty if its maximum (and also its minimum) is zero
+
+
+The mode of a quantifier affects the order in which matches are attempted to be made.
+Using the following pattern (1|2) with a minimum and maximum of 0 and 2 (respectively) is attempted to be matched in the following orders :
+Greedy:    1 1, 1 2, 1, 2 1, 2 2, 2, Nothing
+Reluctant: Nothing, 1, 1 1, 1 2, 2, 2 1, 2 2
+Possessive: 1 1 (no further attempts)

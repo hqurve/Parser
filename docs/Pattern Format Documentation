@@ -1,0 +1,171 @@
+There are 7 main types of Patterns
+    | EmptyPattern
+    | ArgumentPattern
+    | TokenPattern
+    | CallerPattern
+    | SequentialPattern
+    | BranchedPattern
+    | QuantifiedPattern
+
+The following Patterns types have their own format, while all others are a result of the predicate parsing process specified below.
+    - TokenPattern
+    - CallerPattern
+    - ArgumentPattern
+
+
+
+Pattern parsing process:
+This handles sequential, branched and quantified patterns
+Format:
+    A list of patterns separated by pipes ('|') where each pattern is:
+        - ArgumentPattern
+        - CallerPattern
+        - TokenPattern
+        - (Pattern)     - this means that the pattern is recursively compiled using this same format (Note that this is purely for formatting and does not show in the result unless it has a quantifier)
+    Additionally, after each pattern, an attempt is made to parse a quantifier. If a non singular quantifier is found, a QuantifiedPattern with the specified quantifier wraps around the previously parsed pattern. Also, if a zero quantifier is found, an emptyPattern replaces the previously parsed pattern)
+Verbose format:
+    pattern1_1 pattern1_2 .. pattern1_N1 | pattern2_1 pattern2_2 .. pattern2_N2 | .. | patternM_1 patternM_2 .. pattern1_NM
+Resolving:
+    This is a two staged process.
+    Firstly, each grouping is resolved based on the number of members
+        0 -> resolve to EmptyPattern
+        1 -> resolve to the single pattern
+        else -> resolve to SequentialPattern
+    Secondly, if the there is only one grouping, it is returned, otherwise a branched pattern is returned
+
+
+
+
+Quantifiers: (see quantifier documentation for explanation)
+The upper and lower bounds are specified by adding a sequence of tokens (as specified below) to the end of a pattern
+    | #{a, b}   - min = a, max = b
+    | #{a, }    - min = a, no max
+    | #{a}      - min = a = max
+    | #{, b}    - min = 0, max = b
+    | #{,}      - min = 0, no max
+    | #{}       - min = 0 = max
+    | *         - shorthand for {,}
+    | +         - shorthand for {1,}
+    | ?         - shorthand for {0, 1}
+    | No symbol - shorthand for {1, 1}
+Note a and b are both integer type tokens between 0 and Int.MAX_VALUE (inclusive). Also, no max really means max = Int.MAX_VALUE.
+Additionally, the mode is specified by a trailing symbol
+    | No symbol - greedy (default)
+    | +         - possessive
+    | ?         - reluctant
+Note that the bounds are processed before the mode, so ? matches to {0, 1} instead of reluctant
+Examples:
+    #{4, 5}?    - min = 4, max = 5, mode = reluctant
+    ++          - min = 1, no max, mode = possessive
+    *?          - min = 0, no max, mode = reluctant
+    #{4,}       - min = 4, no max, mode = greedy
+    +           - min = 1, no max, mode = greedy
+Actual format:
+    ((<symbol>[?] | <symbol>[+] | <symbol>[*] | <symbol>[#] <symbol>[{]  <number>[integer]? (<symbol>[,] <number>[integer]?)?  <symbol>[}])  (<symbol>[?] | <symbol>[+])? )?
+
+
+
+
+
+
+TokenArguments:
+These are for both TokenPatterns and CallerPatterns
+Possible Formats:
+     | Nothing   -> produces null as token
+     | % number  -> refers to one of the tokenArguments specified by the caller
+     | \ symbol  -> escaped symbol (mainly used for ']' and '\' but it can by used for other symbols as well)
+     | token     -> raw token
+Actual Format:
+    (<symbol>[\%] <number>[integer] | <symbol>[\\]<symbol> | <any>)?
+
+
+
+
+
+
+-----------------------------
+EmptyPattern
+-----------------------------
+Matches nothing. Not as it doesnt match anything, but it consumes no tokens when it matches
+Also, be careful when using unbounded quantifiers in conjunction with emptyPatterns as no check is made for this case
+
+
+-----------------------------
+ArgumentPattern
+-----------------------------
+This simple references a supplied matcherArgument specified by the caller
+Format:
+    $ integer
+Note that the specified integer is greater than or equal to one since arguments are 1-based
+Examples:
+    $5      - fifth supplied matcherArgument
+    $1?     - 0 or 1 of the first supplied matcherArgument
+Actual Format:
+    <symbol>[$]<number>[1][]
+
+
+
+
+-----------------------------
+TokenPattern
+-----------------------------
+The TokenPattern forms the basis of the matching process (it is the only thing that is actually matched). This pattern is constructed as follows
+    <keyword>[tArg1][tArg2]..[tArgN]
+    where tArg is a tokenArgument (see above)
+Note that the keyword and arguments form a token-predicate (as specified by Token Predicate Docs) and produces an error if no valid token-predicate is found
+Examples:
+    <number>[1][]                  - matches a integer which is at least 1
+    <symbol>[-]?<number>[INTEGER]  - matches a possible '-' followed by an integer (ie a signed integer)
+    <symbol>[&]#{2}                - matches two ampersands(&)
+    <symbol>[\\]                   - matches a backslash
+Actual Format:
+    <symbol>[<]<label><symbol>[>] ( <symbol>[[] \tokenArgument <symbol>[\]] )*
+
+
+
+-----------------------------
+CallerPattern
+-----------------------------
+The callerPattern references other macros and supplies them with both tokenArguments and matcherArguments
+Format
+    \macroName[tArg1][tArg2]..[tArgN]{mArg1}{mArg2}..{mArgN}
+        where tArg is a tokenArgument (see above)
+              mArg is a matcherArgument parred using the pattern parsing process (see above)
+Examples:
+    \number                                 - matches macro called number
+    \word (<whitespace> \word)* <symbol>[.] - matches a sentence
+    \mathExpression[x]                      - matches a math expression using x
+
+Actual format:
+    <symbol>[\\]<label>( <symbol>[[] \tokenArgument <symbol>[\]] )*+ ( <symbol>[{] \pattern <symbol>[}] )*+
+
+
+
+
+-----------------------------
+SequentialPattern
+-----------------------------
+This pattern has no predefined format and is a result of the pattern parsing process.
+SequentialPatterns consist of a list of patterns which are all matched in sequential order
+
+
+-----------------------------
+BranchedPattern
+-----------------------------
+This pattern has no predefined format and is a result of the pattern parsing process.
+BranchedPatterns consist of a list of patterns which are attempted to be matched one at a time.
+This is useful when you want to match one of many different possible pattern
+Example: see token argument
+
+
+-----------------------------
+QuantifiedPattern
+-----------------------------
+This pattern has no predefined format and is a result of placing a quantifier after a pattern (only recognized in the pattern parsing process).
+
+
+
+
+
+
+

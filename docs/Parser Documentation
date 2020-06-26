@@ -1,0 +1,39 @@
+In order to specify how the parser should parse tokens, a language must be supplied.
+
+The parser takes several macros which are used together to parse a string.
+Additionally, the parser is extremely modular and allows macros to depend on one another (even recursively).
+Moreover, the parser takes an optional argument Tokenizer so that you can change the default flags
+
+
+Each macro is uniquely identified using a signature made up of three properties:
+    - macroName
+    - number of token arguments
+    - number of matcher arguments
+Additionally, a macro is made up of one or more sets of pattern-handler pairs. (We will talk about handlers later in this document)
+Patterns follow a specified format (see pattern format documentation) and are populated with tokenArguments and matcherArguments to in turn create a new matcher.
+Note that attempts to match against a pattern are made in the same order in which they are supplied.
+
+
+Macros are registered using the registerMacro Macro. Upon registering, the macro is immediately compiled.
+The compilation checks for logic errors with respect to arguments and also creates a list of all its dependencies.
+
+Upon registering all macros, the checkCompletion method should be called. This function would raise an exception if any dependency is not met.
+
+
+
+In order to parse a string, the parse function is called with a name of the entryPoint macro (this macro has no arguments) as well as any flags to be used during parsing.
+Firstly, the string is tokenized using the supplied tokenizer.
+After, matches are attempted to be made until the whole string is consumed.
+If no such string is found, null is returned
+If a match is found, result is compiled using handlers (if supplied).
+
+
+Each handler takes a Result and flags object and produces a Result Object.
+There are three types of result objects:
+    - CompoundResult: List of results (implements the list<Result> interface)
+    - ValueResult: simply holds a value
+    - TokenResult: simply holds a token
+
+
+
+
