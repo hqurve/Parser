@@ -1,9 +1,9 @@
 package com.hqurve.parsing
 
-internal infix fun Token?.matches(tokenPredicate: TokenPredicate) = tokenPredicate.matches(this)
+infix fun Token?.matches(tokenPredicate: TokenPredicate) = tokenPredicate.matches(this)
 
 
-internal class TokenPredicate private constructor(
+class TokenPredicate private constructor(
     vararg comparableProperties: Any?,
     val matcherFun: (token: Token?)->Boolean
 ){

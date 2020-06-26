@@ -3,6 +3,7 @@ package com.hqurve.parsing
 
 interface Result<T>
 data class CompoundResult<T>(val subResults: List<Result<T>>): Result<T>, List<Result<T>>{
+    constructor(vararg subs: Result<T>): this(subs.toList())
     override val size: Int
         get() = subResults.size
 
@@ -21,9 +22,9 @@ data class ValueResult<T>(val value: T): Result<T>
 data class TokenResult<T>(val token: Token): Result<T>
 
 
-internal class Parser<T, F>(val tokenizer: Tokenizer = Tokenizer()){
+class Parser<T, F>(private val tokenizer: Tokenizer = Tokenizer()){
 
-    inner class ResultHandler(val handler: (Result<T>, F)->Result<T> = {result, _ -> result}){
+    private inner class ResultHandler(val handler: (Result<T>, F)->Result<T> = {result, _ -> result}){
         fun handle(result: Result<T>, flags: F) = handler(result, flags)
     }
 
