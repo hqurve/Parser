@@ -1,7 +1,11 @@
 package com.hqurve.parsing
 
 
-interface Result<T>
+interface Result<T>{
+    fun asCompound() = this as CompoundResult
+    fun <V: T> asValue() = (this as ValueResult).value as V
+    fun <V: Token> asToken() = (this as TokenResult).token as V
+}
 data class CompoundResult<T>(val subResults: List<Result<T>>): Result<T>, List<Result<T>>{
     constructor(vararg subs: Result<T>): this(subs.toList())
     override val size: Int
@@ -17,6 +21,10 @@ data class CompoundResult<T>(val subResults: List<Result<T>>): Result<T>, List<R
     override fun listIterator() = subResults.listIterator()
     override fun listIterator(index: Int) = subResults.listIterator(index)
     override fun subList(fromIndex: Int, toIndex: Int) = subResults.subList(fromIndex, toIndex)
+
+    fun <V: T> valueAt(index: Int) = get(index).asValue<V>()
+    fun <V: Token> tokenAt(index: Int) = get(index).asToken<V>()
+    fun compoundAt(index: Int) = get(index) as CompoundResult
 }
 data class ValueResult<T>(val value: T): Result<T>
 data class TokenResult<T>(val token: Token): Result<T>
@@ -536,7 +544,12 @@ class Parser<T, F>(private val tokenizer: Tokenizer = Tokenizer()){
         error("Missing the following signatures used by: $missingMap")
     }
 }
-
+    fun registerValueMacro(macroName: String, tokenArgumentCount: Int, matcherArgumentCount: Int, patternHandlerPairs: List<Pair<String, (Result<T>, F) -> T>>){
+        fun wrapper(f: (Result<T>, F)-> T): (Result<T>, F)->ValueResult<T>{
+            return { res, flag -> ValueResult(f(res, flag)) }
+        }
+        registerMacro(macroName, tokenArgumentCount, matcherArgumentCount, patternHandlerPairs.map{ (pattern, f) -> pattern to wrapper(f) })
+    }
     fun registerMacro(macroName: String, tokenArgumentCount: Int, matcherArgumentCount: Int, patternHandlerPairs: List<Pair<String, (Result<T>, F) -> Result<T>>>){
         if (patternHandlerPairs.isEmpty()) error("Empty patternHandlerPair list")
         val signature = MatcherTemplateSignature(macroName, tokenArgumentCount, matcherArgumentCount)
